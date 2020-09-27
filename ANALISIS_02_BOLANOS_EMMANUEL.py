@@ -1,6 +1,5 @@
 # Importamos las librerías a usar
 import pandas as pd
-import numpy as np
 
 # Abrimos el archivo, leemos los valores y creamos una
 # dataframe con ellos en la variable df
@@ -11,7 +10,7 @@ with open("synergy_logistics_database.csv", "r") as database:
 # Obtenemos los nombres de las columnas
 # y los asignamos a una variable
 cols = df.columns
-#print(cols)
+# print(cols)
 
 # Tomamos las columnas que nos interesan para realizar
 # el análisis propuesto en la opción 1
@@ -68,8 +67,8 @@ max_by_column = df_op2.iloc[0:4, 1:4].max()
 
 # Dividimos cada columna por su máximo y renombramos las columnas
 max_rets = df_op2.iloc[0:4, 1:4]/max_by_column
-max_rets = max_rets.rename(columns={'sum': 'norm_sum',
-                                    'count': 'norm_count', 'mean': 'norm_mean'})
+max_rets = max_rets.rename(
+    columns={'sum': 'norm_sum', 'count': 'norm_count', 'mean': 'norm_mean'})
 
 # Agregamos los valores obtenidos a nuestra dataframe anterior e imprimimos
 df_op2 = df_op2.join(max_rets)
@@ -78,26 +77,33 @@ df_op2 = df_op2.join(max_rets)
 # OP.3 VALOR TOTAL DE IN/OUT. Si nos enfocamos en los países que generan
 # el 80% del valor de los in/outs, que países serian esos.
 
-total_values = df.groupby('direction').total_value.sum().reset_index(name='totals')
+# Dataframe con las sumas para cada país
+countries_totals = df.groupby(['direction', 'origin']).\
+    total_value.sum().reset_index()
 
-countries_value = df.groupby(['direction', 'origin']).total_value.sum().reset_index()
-# print(countries_value)
+# Dividir datos en dos dataframes distintos,
+# uno para exportaciones y otro para importaciones
+countries_sum_exports = (countries_totals.loc[countries_totals['direction'] == 'Exports'])
+countries_sum_imports = (countries_totals.loc[countries_totals['direction'] == 'Imports'])
 
-cond = countries_value['direction'] == 'Exports'
+# Dividir las sumas de cada país entre la suma total
+# y agregar como una nueva columna
+countries_per_export = (countries_sum_exports.iloc[:, 2]
+                        / countries_sum_exports.iloc[:, 2].sum()).rename('total_%')
+countries_per_import = (countries_sum_imports.iloc[:, 2]
+                        / countries_sum_imports.iloc[:, 2].sum()).rename('total_%')
 
-countries_value['total_value'] = countries_value['total_value'].\
-    mask(cond, countries_value['total_value'].div(total_values.iloc[0, 1]))
-countries_value['total_value'] = countries_value['total_value'].\
-    mask(~cond, countries_value['total_value'].div(total_values.iloc[1, 1]))
+countries_sum_exports = pd.concat([countries_sum_exports, countries_per_export], axis=1)
+countries_sum_imports = pd.concat([countries_sum_imports, countries_per_import], axis=1)
 
-countries_value.sort_values(['direction', 'total_value'],
-                            ascending=[True, False], inplace=True)
+countries_sum_exports.sort_values(['total_%'], ascending=False, inplace=True)
+countries_sum_imports.sort_values(['total_%'], ascending=False, inplace=True)
 
-countries_value['cum_val'] = countries_value['total_value'].\
-    mask(cond, countries_value['total_value'].cumsum())
-countries_value['cum_val'] = countries_value['cum_val'].\
-    mask(~cond, countries_value['total_value'].cumsum())
+countries_sum_exports['cumulative_%'] = countries_sum_exports['total_%'].cumsum()
+countries_sum_imports['cumulative_%'] = countries_sum_imports['total_%'].cumsum()
 
-print(countries_value)
+countries_sum_exports = countries_sum_exports.loc[countries_sum_exports['cumulative_%'] <= 0.8]
+countries_sum_imports = countries_sum_imports.loc[countries_sum_imports['cumulative_%'] <= 0.8]
 
-# it looks cool, but better to separate the df into two!
+# print(countries_sum_exports)
+# print(countries_sum_imports)
