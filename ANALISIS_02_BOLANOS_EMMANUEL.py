@@ -4,7 +4,6 @@
     *  CÓDIGO ESCRITO POR EMMANUEL BOLAÑOS  *
     *                                       *
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ADD GITHUB REPO TO DOC!
 """
 
 # Importamos las librerías a usar
