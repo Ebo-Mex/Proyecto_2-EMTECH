@@ -68,9 +68,8 @@ while 1:
         df_op1 = df.loc[:, util_cols_1]
 
         # Agrupamos con groupby las filas donde la columna de dirección,
-        # origen y destino coinciden. Además, usando las funciones sum, count y mean
-        # calculamos el total de ganancias, la cantidad de veces que se ha usado la
-        # ruta y el promedio lo usamos para conocer cual es la ganancia por viaje
+        # origen y destino coinciden. Además, aplicamos las funciones
+        # de agregado sum, count y mean
         df_op1 = df_op1.groupby([cols[0], cols[1], cols[2]]).\
             agg(['sum', 'count', 'mean']).reset_index()
 
