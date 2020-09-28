@@ -7,7 +7,6 @@
 """
 
 # Importamos las librerías a usar
-import sys
 import pandas as pd
 
 print("BIENVENIDO!")
